@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TraceZero · War Room</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = { theme: { extend: {
+  fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'ui-monospace', 'monospace'] },
+  colors: { ink: { 950: '#07080c', 900: '#0b0d13', 850: '#10131b', 800: '#151923', 700: '#1e2330', 600: '#2a3142' } }
+} } };
+</script>
+<style>
+  :root { --ok: #22c55e; --amber: #f59e0b; --red: #ef4444; --cyan: #22d3ee; --violet: #a78bfa; }
+  html, body { background: #07080c; }
+  body { background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34,211,238,.08), transparent),
+                           radial-gradient(ellipse 60% 40% at 100% 0%, rgba(167,139,250,.06), transparent); }
+  .panel { background: rgba(16,19,27,.78); border: 1px solid #1e2330; border-radius: 14px; backdrop-filter: blur(8px); }
+  .panel-h { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8b93a7; font-weight: 600; }
+  .scroll::-webkit-scrollbar { width: 6px; height: 6px; } .scroll::-webkit-scrollbar-thumb { background: #2a3142; border-radius: 3px; }
+  .ev { animation: slidein .28s ease-out both; }
+  @keyframes slidein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .pulse-dot { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  .typing span { animation: blink 1.2s infinite both; } .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink { 0%,80%,100% { opacity: .2; } 40% { opacity: 1; } }
+  .step { transition: all .3s; }
+  .step.done .dot { background: #22c55e; border-color: #22c55e; color: #07080c; }
+  .step.active .dot { border-color: #22d3ee; color: #22d3ee; box-shadow: 0 0 0 4px rgba(34,211,238,.15), 0 0 18px rgba(34,211,238,.5); }
+  .step.active .lbl { color: #e5e7eb; }
+  .step.fail .dot { border-color: #ef4444; color: #ef4444; }
+  .bar.done { background: linear-gradient(90deg, #22c55e, #22c55e); }
+  .code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.55; }
+  .glow-red { box-shadow: 0 0 0 1px rgba(239,68,68,.5), 0 0 30px rgba(239,68,68,.18); }
+  .glow-amber { box-shadow: 0 0 0 1px rgba(245,158,11,.5), 0 0 30px rgba(245,158,11,.15); }
+  .glow-green { box-shadow: 0 0 0 1px rgba(34,197,94,.5), 0 0 30px rgba(34,197,94,.15); }
+  .btn { transition: all .15s; } .btn:active { transform: scale(.97); } .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .flash { animation: flash 1s ease-out; } @keyframes flash { from { background: rgba(34,211,238,.25); } to { background: transparent; } }
+  .gauge-ring { transition: stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1); }
+  .scanline { position: fixed; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px); z-index: 1; }
+</style>
+</head>
+<body class="text-slate-200 font-sans min-h-screen antialiased">
+<div class="scanline"></div>
+<div class="relative z-10 max-w-[1680px] mx-auto px-5 py-4 space-y-4">
+
+  <!-- ===== Top bar ===== -->
+  <header class="flex items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-violet-500 grid place-items-center shadow-lg shadow-cyan-500/20">
+        <i data-lucide="shield-plus" class="w-5 h-5 text-ink-950"></i>
+      </div>
+      <div>
+        <div class="text-lg font-bold tracking-tight">Trace<span class="text-cyan-400">Zero</span></div>
+        <div class="text-[11px] text-slate-500 -mt-0.5">The autonomous immune system for production code</div>
+      </div>
+    </div>
+    <div id="sysStatus" class="ml-4 flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-semibold">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span><span id="sysStatusText">ALL SYSTEMS HEALTHY</span>
+    </div>
+    <div class="ml-auto flex items-center gap-2">
+      <span id="modeBadge" class="px-2.5 py-1 rounded-md bg-ink-800 border border-ink-600 text-[11px] font-mono text-violet-300">…</span>
+      <span id="sseBadge" class="px-2.5 py-1 rounded-md bg-ink-800 border border-ink-600 text-[11px] font-mono text-slate-400">SSE …</span>
+      <button id="resetBtn" class="btn px-3 py-1.5 rounded-md bg-ink-800 border border-ink-600 text-xs hover:border-slate-400 flex items-center gap-1.5">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>Reset demo</button>
+    </div>
+  </header>
+
+  <!-- ===== KPI strip + heartbeat ===== -->
+  <section class="grid grid-cols-12 gap-4">
+    <div class="col-span-12 xl:col-span-8 panel p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="panel-h flex items-center gap-2"><i data-lucide="activity" class="w-3.5 h-3.5 text-cyan-400"></i>Live traffic heartbeat · POST /shop/checkout</div>
+        <div class="flex items-center gap-4 text-[11px] text-slate-400">
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>200 OK</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>Shielded</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span>500 Error</span>
+          <button id="trafficBtn" class="btn ml-2 px-2 py-0.5 rounded border border-ink-600 hover:border-slate-400 flex items-center gap-1"><i data-lucide="pause" class="w-3 h-3"></i><span>Pause</span></button>
+        </div>
+      </div>
+      <div class="h-[132px]"><canvas id="heartbeat"></canvas></div>
+    </div>
+    <div class="col-span-12 xl:col-span-4 grid grid-cols-2 gap-3">
+      <div class="panel p-3.5"><div class="panel-h">Requests served</div><div id="kReq" class="text-2xl font-bold mt-1 font-mono">0</div><div id="kHealth" class="text-[11px] text-slate-500">100% healthy</div></div>
+      <div class="panel p-3.5"><div class="panel-h">Users protected</div><div id="kProt" class="text-2xl font-bold mt-1 font-mono text-amber-400">0</div><div class="text-[11px] text-slate-500">would-be 500s shielded</div></div>
+      <div class="panel p-3.5"><div class="panel-h">Time to shield</div><div id="kShield" class="text-2xl font-bold mt-1 font-mono text-cyan-300">-</div><div class="text-[11px] text-slate-500">crash → guardrail armed</div></div>
+      <div class="panel p-3.5 relative overflow-hidden"><div class="panel-h">MTTR saved</div><div id="kMttr" class="text-2xl font-bold mt-1 font-mono text-emerald-400">0m</div><div id="kMttrSub" class="text-[11px] text-slate-500">vs 45-min manual on-call</div></div>
+    </div>
+  </section>
+
+  <!-- ===== Pipeline stepper ===== -->
+  <section class="panel px-5 py-3">
+    <div class="flex items-center gap-2" id="pipeline"></div>
+  </section>
+
+  <!-- ===== Main 3-column war room ===== -->
+  <section class="grid grid-cols-12 gap-4">
+
+    <!-- LEFT: chaos + shields -->
+    <aside class="col-span-12 lg:col-span-3 space-y-4">
+      <div class="panel p-4">
+        <div class="panel-h flex items-center gap-2 mb-3"><i data-lucide="flame" class="w-3.5 h-3.5 text-red-400"></i>Chaos lab</div>
+        <p class="text-[11.5px] text-slate-400 mb-3 leading-relaxed">The code already has the bugs. Chaos changes the <span class="text-slate-200">shape of real traffic</span>, the way a mobile release or a new partner would.</p>
+        <div id="chaosList" class="space-y-2.5"></div>
+      </div>
+      <div class="panel p-4">
+        <div class="panel-h flex items-center gap-2 mb-3"><i data-lucide="shield-half" class="w-3.5 h-3.5 text-amber-400"></i>Active shields</div>
+        <div id="shieldList" class="space-y-2"><div class="text-xs text-slate-500">No shields. Production is clean.</div></div>
+      </div>
+      <div class="panel p-4">
+        <div class="panel-h flex items-center gap-2 mb-2"><i data-lucide="database" class="w-3.5 h-3.5 text-violet-400"></i>Shadow buffer</div>
+        <div class="flex items-end gap-2"><div id="shadowCount" class="text-xl font-mono font-bold">0</div><div class="text-[11px] text-slate-500 pb-1">/ 15 recent good requests recorded for replay</div></div>
+        <div class="mt-2 h-1.5 rounded bg-ink-700 overflow-hidden"><div id="shadowBar" class="h-full bg-violet-400 transition-all" style="width:0%"></div></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: battle stream -->
+    <main class="col-span-12 lg:col-span-4 panel flex flex-col min-h-[640px] max-h-[calc(100vh-330px)]">
+      <div class="px-4 py-3 border-b border-ink-700 flex items-center gap-2">
+        <div class="panel-h flex items-center gap-2"><i data-lucide="swords" class="w-3.5 h-3.5 text-violet-400"></i>Agent battle stream</div>
+        <div class="ml-auto flex items-center gap-3 text-[11px]">
+          <span class="flex items-center gap-1 text-cyan-300"><i data-lucide="stethoscope" class="w-3 h-3"></i>Surgeon</span>
+          <span class="flex items-center gap-1 text-rose-300"><i data-lucide="bug" class="w-3 h-3"></i>Breaker</span>
+          <label class="flex items-center gap-1 text-slate-500"><input id="hideReplay" type="checkbox" class="accent-cyan-400">compact</label>
+        </div>
+      </div>
+      <div id="agentTyping" class="hidden px-4 py-2 text-xs border-b border-ink-700 bg-ink-850"></div>
+      <div id="stream" class="flex-1 overflow-y-auto scroll p-3 space-y-1.5">
+        <div id="emptyStream" class="h-full grid place-items-center text-center text-slate-500 text-sm">
+          <div><i data-lucide="radar" class="w-8 h-8 mx-auto mb-3 text-slate-600"></i>Watching production traffic.<br><span class="text-xs">Inject a chaos bug to wake the immune system.</span></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT: diff, confidence, twins, actions -->
+    <aside class="col-span-12 lg:col-span-5 space-y-4">
+      <div id="actionPanel" class="panel p-4">
+        <div id="verdict" class="text-xs text-slate-500 mb-3">No incident yet.</div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button id="deployBtn" disabled class="btn py-2.5 rounded-lg bg-emerald-500 text-ink-950 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-emerald-400">
+            <i data-lucide="rocket" class="w-4 h-4"></i>Approve &amp; hot-deploy</button>
+          <button id="prBtn" disabled class="btn py-2.5 rounded-lg bg-ink-800 border border-ink-600 text-sm font-semibold flex items-center justify-center gap-2 hover:border-slate-400">
+            <i data-lucide="git-pull-request" class="w-4 h-4"></i>Open GitHub PR</button>
+        </div>
+      </div>
+      <div class="panel p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="panel-h flex items-center gap-2"><i data-lucide="git-compare" class="w-3.5 h-3.5 text-cyan-400"></i>Patch</div>
+          <div id="incTabs" class="flex gap-1.5 ml-2"></div>
+          <span id="patchMeta" class="ml-auto text-[10.5px] font-mono text-slate-500"></span>
+        </div>
+        <div id="diagnosis" class="hidden text-[11.5px] text-slate-300 mb-3 p-2.5 rounded-lg bg-ink-800 border border-ink-700"></div>
+        <div id="diff" class="rounded-lg border border-ink-700 bg-ink-950 overflow-x-auto scroll max-h-[260px]">
+          <div class="p-6 text-center text-xs text-slate-600">The Surgeon's patch will appear here as a side-by-side diff.</div>
+        </div>
+      </div>
+
+      <div class="panel p-4">
+        <div class="panel-h flex items-center gap-2 mb-3"><i data-lucide="radio-tower" class="w-3.5 h-3.5 text-violet-400"></i>Shadow traffic replay</div>
+        <div class="flex items-center gap-4">
+          <div class="relative w-[92px] h-[92px] shrink-0">
+            <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+              <circle cx="50" cy="50" r="42" stroke="#1e2330" stroke-width="9" fill="none"/>
+              <circle id="gaugeRing" class="gauge-ring" cx="50" cy="50" r="42" stroke="#22c55e" stroke-width="9" fill="none" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="263.9"/>
+            </svg>
+            <div class="absolute inset-0 grid place-items-center text-center">
+              <div><div id="gaugePct" class="text-lg font-bold font-mono">-</div><div class="text-[9px] text-slate-500 -mt-1">confidence</div></div>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div id="replaySummary" class="text-sm font-semibold text-slate-400">Waiting for a candidate patch</div>
+            <div id="replayRegress" class="text-[11px] text-slate-500 mb-2">Real requests are replayed and diffed byte-for-byte against production.</div>
+            <div id="replayDots" class="flex flex-wrap gap-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="twinPanel" class="panel p-4 hidden">
+        <div class="panel-h flex items-center gap-2 mb-3"><i data-lucide="syringe" class="w-3.5 h-3.5 text-amber-400"></i>Twin-bug vaccination</div>
+        <div id="twinList" class="space-y-2.5"></div>
+      </div>
+
+    </aside>
+  </section>
+</div>
+
+<!-- ===== PR modal ===== -->
+<div id="prModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm grid place-items-center p-6">
+  <div class="panel w-full max-w-4xl max-h-[88vh] flex flex-col !bg-ink-900">
+    <div class="px-5 py-4 border-b border-ink-700 flex items-center gap-3">
+      <i data-lucide="git-pull-request" class="w-5 h-5 text-emerald-400"></i>
+      <div class="min-w-0">
+        <div id="prTitle" class="font-semibold truncate"></div>
+        <div id="prMeta" class="text-[11px] text-slate-500 font-mono"></div>
+      </div>
+      <a id="prLink" target="_blank" rel="noopener" class="hidden ml-auto px-3 py-1.5 rounded-md bg-emerald-500 text-ink-950 text-xs font-semibold">View on GitHub</a>
+      <button id="prClose" class="ml-auto btn p-1.5 rounded hover:bg-ink-700"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="flex border-b border-ink-700 text-xs">
+      <button data-tab="body" class="prtab px-4 py-2 border-b-2 border-cyan-400 text-slate-100">Postmortem</button>
+      <button data-tab="diff" class="prtab px-4 py-2 border-b-2 border-transparent text-slate-400">Files changed</button>
+    </div>
+    <div class="overflow-auto scroll p-5">
+      <pre id="prBody" class="code whitespace-pre-wrap text-slate-300"></pre>
+      <pre id="prDiff" class="code hidden"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================ helpers
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const icons = () => lucide.createIcons({ attrs: { 'stroke-width': 2 } });
+const fmtDur = (s) => s >= 3600 ? `${(s/3600).toFixed(1)}h` : s >= 60 ? `${Math.round(s/60)}m` : `${Math.round(s)}s`;
+async function api(path, method = 'POST') {
+  const r = await fetch(path, { method });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+
+// ============================================================ pipeline
+const STAGES = [
+  ['detect', 'Detect', 'radar'], ['shield', 'Instant Shield', 'shield'], ['reproduce', 'Red test', 'flask-conical'],
+  ['battle', 'Surgeon vs Breaker', 'swords'], ['replay', 'Shadow replay', 'radio-tower'],
+  ['vaccinate', 'Vaccinate twins', 'syringe'], ['verified', 'Verified', 'badge-check'], ['deployed', 'Hot-deployed', 'rocket'],
+];
+function renderPipeline(stage, failed) {
+  const idx = STAGES.findIndex(s => s[0] === stage);
+  $('pipeline').innerHTML = STAGES.map(([key, label, icon], i) => {
+    let cls = i < idx || (stage === 'deployed' && i === idx) ? 'done' : i === idx ? (failed ? 'fail' : 'active') : '';
+    if (idx < 0) cls = '';
+    const bar = i < STAGES.length - 1 ? `<div class="flex-1 h-[2px] rounded ${i < idx ? 'bg-emerald-500' : 'bg-ink-700'} transition-all"></div>` : '';
+    return `<div class="step ${cls} flex items-center gap-2 shrink-0"><div class="dot w-7 h-7 rounded-full border-2 border-ink-600 grid place-items-center text-slate-500"><i data-lucide="${i < idx ? 'check' : icon}" class="w-3.5 h-3.5"></i></div><span class="lbl text-[11.5px] font-medium text-slate-500 hidden md:inline">${label}</span></div>${bar}`;
+  }).join('');
+  icons();
+}
+
+// ============================================================ heartbeat chart
+const MAX_TICKS = 48;
+const chart = new Chart($('heartbeat'), {
+  type: 'bar',
+  data: { labels: Array(MAX_TICKS).fill(''), datasets: [
+    { label: 'OK', data: Array(MAX_TICKS).fill(0), backgroundColor: '#22c55e', borderRadius: 2, stack: 's' },
+    { label: 'Shielded', data: Array(MAX_TICKS).fill(0), backgroundColor: '#f59e0b', borderRadius: 2, stack: 's' },
+    { label: 'Error', data: Array(MAX_TICKS).fill(0), backgroundColor: '#ef4444', borderRadius: 2, stack: 's' },
+  ] },
+  options: {
+    animation: { duration: 250 }, maintainAspectRatio: false, responsive: true,
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    scales: { x: { stacked: true, display: false }, y: { stacked: true, display: false, max: 5, beginAtZero: true } },
+    datasets: { bar: { barPercentage: 0.78, categoryPercentage: 1 } },
+  },
+});
+function pushTick(ok, sh, err) {
+  const ds = chart.data.datasets;
+  [ok, sh, err].forEach((v, i) => { ds[i].data.push(v); ds[i].data.shift(); });
+  chart.update();
+}
+
+// ============================================================ traffic generator
+const SKUS = ['SKU-HOODIE', 'SKU-CAP', 'SKU-MUG', 'SKU-KEYS', 'SKU-STICK'];
+const COUPONS = ['', '', ' launch10 ', 'VIP20', 'hacker15', 'BOGUS'];
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+function healthyCart() {
+  const n = 1 + Math.floor(Math.random() * 3);
+  const items = [...SKUS].sort(() => Math.random() - .5).slice(0, n).map(sku => ({ sku, qty: 1 + Math.floor(Math.random() * 3) }));
+  return { items, coupon_code: pick(COUPONS) };
+}
+let chaos = {}; let trafficOn = true;
+function tickPayloads() {
+  const batch = [healthyCart(), healthyCart(), healthyCart()];
+  if (chaos.empty_cart) batch.push({ items: [], coupon_code: '' });
+  if (chaos.null_coupon) batch.push({ items: [{ sku: pick(SKUS), qty: 1 }], coupon_code: null });
+  return batch;
+}
+async function heartbeat() {
+  if (!trafficOn) return;
+  const results = await Promise.all(tickPayloads().map(p =>
+    fetch('/shop/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) })
+      .then(r => r.status === 200 ? 'ok' : (r.headers.get('X-TraceZero') === 'shielded' ? 'sh' : 'err'))
+      .catch(() => 'err')));
+  const c = (k) => results.filter(x => x === k).length;
+  pushTick(c('ok'), c('sh'), c('err'));
+}
+setInterval(heartbeat, 1500);
+$('trafficBtn').onclick = () => {
+  trafficOn = !trafficOn;
+  $('trafficBtn').innerHTML = trafficOn ? '<i data-lucide="pause" class="w-3 h-3"></i><span>Pause</span>' : '<i data-lucide="play" class="w-3 h-3"></i><span>Resume</span>';
+  icons();
+};
+
+// ============================================================ state polling
+let lastState = null;
+async function pollState() {
+  try { lastState = await api('/api/state', 'GET'); } catch { return; }
+  const s = lastState;
+  chaos = Object.fromEntries(s.chaos.map(c => [c.id, c.active]));
+  $('modeBadge').textContent = s.mode.label;
+  $('kReq').textContent = s.stats.requests.toLocaleString();
+  const health = s.stats.requests ? (100 * (s.stats.ok + s.stats.shielded) / s.stats.requests) : 100;
+  $('kHealth').textContent = `${health.toFixed(1)}% served without a 500`;
+  $('kProt').textContent = s.stats.shielded.toLocaleString();
+  $('kShield').textContent = s.mttr.avg_shield_ms != null ? `${Math.round(s.mttr.avg_shield_ms)}ms` : '-';
+  $('kMttr').textContent = s.mttr.deployed ? fmtDur(s.mttr.saved_seconds) : '0m';
+  $('kMttrSub').textContent = s.mttr.deployed
+    ? `${s.mttr.deployed} fix${s.mttr.deployed > 1 ? 'es' : ''} in ${fmtDur(s.mttr.actual_seconds)} vs ${s.mttr.baseline_minutes}-min on-call baseline`
+    : `vs ${s.mttr.baseline_minutes}-min manual on-call baseline`;
+  $('shadowCount').textContent = s.shadow_buffer;
+  $('shadowBar').style.width = `${(s.shadow_buffer / 15) * 100}%`;
+  renderChaos(s.chaos);
+  renderShields(s.shields);
+  renderSystemStatus(s);
+  s.incidents.forEach(i => { ensureInc(i.id).status = i.status; ensureInc(i.id).data = i; });
+  renderIncTabs();
+  renderActions();
+}
+setInterval(pollState, 1000);
+
+function renderSystemStatus(s) {
+  const active = s.incidents.filter(i => i.status !== 'deployed');
+  const raw = s.shields.some(sh => !sh.active && !sh.retired) || active.some(i => !i.shield_id);
+  const el = $('sysStatus');
+  let cls, text;
+  if (raw) { cls = 'border-red-500/40 bg-red-500/10 text-red-300'; text = 'PRODUCTION INCIDENT: 500s LIVE'; }
+  else if (active.length) { cls = 'border-amber-500/40 bg-amber-500/10 text-amber-300'; text = `SHIELDED · ${active.length} INCIDENT${active.length > 1 ? 'S' : ''} HEALING`; }
+  else { cls = 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'; text = s.incidents.length ? 'IMMUNE · ALL FIXES DEPLOYED' : 'ALL SYSTEMS HEALTHY'; }
+  el.className = `ml-4 flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${cls}`;
+  $('sysStatusText').textContent = text;
+  el.querySelector('span').className = `w-2 h-2 rounded-full pulse-dot ${raw ? 'bg-red-400' : active.length ? 'bg-amber-400' : 'bg-emerald-400'}`;
+}
+
+function renderChaos(list) {
+  const icon = { empty_cart: 'smartphone', null_coupon: 'handshake' };
+  const html = list.map((c, i) => `
+    <div class="rounded-xl border ${c.active ? 'border-red-500/50 bg-red-500/[.06] glow-red' : 'border-ink-700 bg-ink-850'} p-3 transition-all">
+      <div class="flex items-start gap-2.5">
+        <div class="w-8 h-8 rounded-lg ${c.active ? 'bg-red-500/20 text-red-300' : 'bg-ink-700 text-slate-400'} grid place-items-center shrink-0"><i data-lucide="${icon[c.id] || 'zap'}" class="w-4 h-4"></i></div>
+        <div class="min-w-0 flex-1">
+          <div class="text-[13px] font-semibold">Bug ${i + 1}: ${esc(c.name)}</div>
+          <div class="text-[11px] text-slate-400 leading-snug">${esc(c.story)}</div>
+          <div class="text-[10.5px] font-mono text-slate-500 mt-1">latent ${esc(c.expected)}</div>
+        </div>
+      </div>
+      <button data-chaos="${c.id}" data-on="${!c.active}" class="btn mt-2.5 w-full py-1.5 rounded-lg text-xs font-semibold ${c.active ? 'bg-ink-700 text-slate-300 hover:bg-ink-600' : 'bg-red-500/90 hover:bg-red-500 text-white'} flex items-center justify-center gap-1.5">
+        <i data-lucide="${c.active ? 'square' : 'zap'}" class="w-3.5 h-3.5"></i>${c.active ? 'Stop chaos' : `Inject chaos bug ${i + 1}`}</button>
+    </div>`).join('');
+  if ($('chaosList').dataset.sig !== html) { $('chaosList').innerHTML = html; $('chaosList').dataset.sig = html; icons(); }
+}
+$('chaosList').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-chaos]'); if (!b) return;
+  await api(`/api/chaos/${b.dataset.chaos}?enable=${b.dataset.on}`);
+  chaos[b.dataset.chaos] = b.dataset.on === 'true';
+  pollState(); heartbeat();
+});
+
+function renderShields(list) {
+  const visible = list.filter(s => !s.retired);
+  const retired = list.filter(s => s.retired);
+  let html = visible.map(s => `
+    <div class="rounded-lg border ${s.active ? 'border-amber-500/40 bg-amber-500/[.06]' : 'border-red-500/40 bg-red-500/[.06]'} p-2.5">
+      <div class="flex items-center gap-2">
+        <i data-lucide="${s.active ? 'shield-check' : 'shield-off'}" class="w-4 h-4 ${s.active ? 'text-amber-400' : 'text-red-400'}"></i>
+        <span class="font-mono text-xs font-semibold">${esc(s.id)}</span>
+        <span class="ml-auto text-[10.5px] font-mono ${s.active ? 'text-amber-300' : 'text-red-300'}">${s.active ? `${s.hits} absorbed` : 'LIFTED'}</span>
+      </div>
+      <div class="text-[11px] text-slate-400 mt-1 font-mono truncate">${esc(s.exc_type)} @ ${esc(s.target)}()</div>
+      <div class="flex items-center gap-2 mt-2">
+        <span class="text-[10.5px] text-slate-500 truncate flex-1">${esc(s.fallback)}</span>
+        <button data-shield="${s.id}" data-act="${s.active ? 'lift' : 'arm'}" class="btn text-[10.5px] px-2 py-0.5 rounded border border-ink-600 hover:border-slate-400">${s.active ? 'Lift' : 'Re-arm'}</button>
+      </div>
+    </div>`).join('');
+  html += retired.map(s => `<div class="flex items-center gap-2 text-[11px] text-slate-500 px-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i><span class="font-mono">${esc(s.id)}</span> retired by hot-fix · ${s.hits} absorbed</div>`).join('');
+  if (!list.length) html = '<div class="text-xs text-slate-500">No shields. Production is clean.</div>';
+  if ($('shieldList').dataset.sig !== html) { $('shieldList').innerHTML = html; $('shieldList').dataset.sig = html; icons(); }
+}
+$('shieldList').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-shield]'); if (!b) return;
+  try { await api(`/api/shields/${b.dataset.shield}/${b.dataset.act}`); } catch (err) { alert(err.message); }
+  pollState();
+});
+
+// ============================================================ per-incident UI state
+const incs = {}; let focusId = null;
+function ensureInc(id) {
+  return incs[id] ||= { id, stage: 'detect', failed: false, status: 'detected', diff: null, meta: '', diagnosis: '', replay: [], summary: null, twins: {}, pr: null, data: null };
+}
+function focus(id) { focusId = id; renderIncTabs(); renderRight(); }
+function renderIncTabs() {
+  const ids = Object.keys(incs);
+  const col = (st) => st === 'deployed' ? 'emerald' : st === 'escalated' ? 'red' : st === 'verified' ? 'cyan' : 'amber';
+  const html = ids.map(id => {
+    const c = col(incs[id].status);
+    return `<button data-inc="${id}" class="text-[10.5px] font-mono px-2 py-0.5 rounded border ${id === focusId ? `border-${c}-400 text-${c}-300 bg-${c}-500/10` : 'border-ink-600 text-slate-500'}">${id}</button>`;
+  }).join('');
+  if ($('incTabs').dataset.sig !== html) { $('incTabs').innerHTML = html; $('incTabs').dataset.sig = html; }
+}
+$('incTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-inc]'); if (b) focus(b.dataset.inc); });
+
+function diffTable(rows) {
+  const cell = (txt, side, kind) => {
+    if (txt === null) return `<td class="px-2 bg-ink-900/60"></td>`;
+    const changed = kind !== 'eq';
+    const bg = changed ? (side === 'l' ? 'bg-red-500/[.12] text-red-200' : 'bg-emerald-500/[.12] text-emerald-200') : 'text-slate-400';
+    const sign = changed ? (side === 'l' ? '−' : '+') : ' ';
+    return `<td class="px-2 align-top whitespace-pre-wrap break-words ${bg}"><span class="select-none opacity-50 mr-1">${sign}</span>${esc(txt)}</td>`;
+  };
+  return `<table class="code w-full border-collapse table-fixed"><thead><tr class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-ink-700">
+    <th class="text-left px-2 py-1.5 font-medium">production (before)</th><th class="text-left px-2 py-1.5 font-medium border-l border-ink-700">surgeon patch (after)</th></tr></thead>
+    <tbody>${rows.map(r => `<tr>${cell(r.l, 'l', r.kind)}${cell(r.r, 'r', r.kind).replace('<td class="', '<td class="border-l border-ink-800 ')}</tr>`).join('')}</tbody></table>`;
+}
+
+function renderRight() {
+  const u = focusId && incs[focusId];
+  if (!u) return;
+  renderPipeline(u.stage, u.failed);
+  $('patchMeta').textContent = u.meta;
+  $('diagnosis').classList.toggle('hidden', !u.diagnosis);
+  $('diagnosis').innerHTML = u.diagnosis ? `<span class="text-cyan-300 font-semibold">Root cause:</span> ${esc(u.diagnosis)}` : '';
+  if (u.diff) $('diff').innerHTML = diffTable(u.diff);
+  // replay
+  $('replayDots').innerHTML = u.replay.map(r => `<span title="${esc(r.title)}: ${esc(r.detail)}" class="w-3.5 h-3.5 rounded-[3px] ${r.ok ? (r.kind === 'crash' ? 'bg-cyan-400' : 'bg-emerald-500') : 'bg-red-500'}"></span>`).join('');
+  if (u.summary) {
+    const pct = u.summary.confidence;
+    $('gaugeRing').style.strokeDashoffset = 263.9 * (1 - pct / 100);
+    $('gaugeRing').setAttribute('stroke', pct === 100 ? '#22c55e' : pct > 80 ? '#f59e0b' : '#ef4444');
+    $('gaugePct').textContent = `${Math.round(pct)}%`;
+    $('replaySummary').innerHTML = `<span class="${u.summary.regressions ? 'text-red-300' : 'text-emerald-300'}">${u.summary.passed}/${u.summary.total} passed</span>`;
+    $('replayRegress').textContent = `${u.summary.regressions} regressions · crash requests (cyan) now succeed`;
+  } else {
+    $('gaugeRing').style.strokeDashoffset = 263.9; $('gaugePct').textContent = u.replay.length ? '…' : '-';
+    $('replaySummary').textContent = u.replay.length ? `Replaying… ${u.replay.length}` : 'Waiting for a candidate patch';
+    $('replayRegress').textContent = 'Real requests are replayed and diffed byte-for-byte against production.';
+  }
+  // twins
+  const twins = Object.values(u.twins);
+  $('twinPanel').classList.toggle('hidden', !twins.length);
+  $('twinList').innerHTML = twins.map(t => `
+    <div class="rounded-lg border ${t.vaccinated ? 'border-emerald-500/40 bg-emerald-500/[.05]' : 'border-amber-500/40 bg-amber-500/[.06] glow-amber'} p-3">
+      <div class="flex items-center gap-2">
+        <i data-lucide="${t.vaccinated ? 'shield-check' : 'scan-search'}" class="w-4 h-4 ${t.vaccinated ? 'text-emerald-400' : 'text-amber-400'}"></i>
+        <span class="text-[12.5px] font-semibold">Twin found: <span class="font-mono">${esc(t.file)}:${t.line}</span></span>
+        <span class="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded ${t.vaccinated ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">${t.vaccinated ? 'VACCINATED' : 'VULNERABLE'}</span>
+      </div>
+      <div class="text-[11px] text-slate-400 mt-1"><span class="font-mono text-slate-300">${esc(t.function)}()</span>: ${esc(t.reason)}</div>
+      <div class="text-[10.5px] text-slate-500 mt-1">${t.vaccinated ? 'Pre-patched, verified against poison input, staged into the same PR.' : 'Same anti-pattern as the incident. Zero crashes so far; it is only a matter of traffic.'}</div>
+      ${t.diff_rows ? `<details class="mt-2"><summary class="text-[10.5px] text-cyan-300 cursor-pointer">view vaccine diff</summary><div class="mt-2 rounded border border-ink-700 bg-ink-950 overflow-x-auto scroll">${diffTable(t.diff_rows)}</div></details>` : ''}
+    </div>`).join('');
+  renderActions();
+  icons();
+}
+
+function renderActions() {
+  const u = focusId && incs[focusId];
+  const st = u ? u.status : null;
+  $('deployBtn').disabled = st !== 'verified';
+  $('prBtn').disabled = !(st === 'verified' || st === 'deployed');
+  $('actionPanel').classList.toggle('glow-green', st === 'verified');
+  const v = $('verdict');
+  const map = {
+    detected: ['text-red-300', 'Crash detected. Arming shield…'],
+    shielded: ['text-amber-300', 'Shield is absorbing the crash. Agents are working on a fix.'],
+    healing: ['text-amber-300', 'Surgeon vs Breaker in progress…'],
+    verified: ['text-cyan-300', 'Fix verified by tests, shadow replay and twin scan. Your call: hot-deploy?'],
+    deployed: ['text-emerald-300', 'Deployed with zero downtime. Shield retired. Open the PR so the fix lands in git.'],
+    escalated: ['text-red-300', 'Agents could not converge. Shield stays up; paging on-call.'],
+  };
+  if (st && map[st]) { v.className = `text-xs mb-3 font-medium ${map[st][0]}`; v.textContent = `${focusId}: ${map[st][1]}`; }
+}
+$('deployBtn').onclick = async () => {
+  $('deployBtn').disabled = true;
+  try { await api(`/api/incidents/${focusId}/deploy`); } catch (e) { alert(e.message); }
+  pollState();
+};
+$('prBtn').onclick = async () => {
+  $('prBtn').disabled = true;
+  $('prBtn').innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>Opening PR…'; icons();
+  try { showPR(await api(`/api/incidents/${focusId}/pr`)); } catch (e) { alert(e.message); }
+  $('prBtn').innerHTML = '<i data-lucide="git-pull-request" class="w-4 h-4"></i>Open GitHub PR'; icons();
+  renderActions();
+};
+
+// ============================================================ PR modal
+function colorDiff(d) {
+  return d.split('\n').map(l => {
+    const c = l.startsWith('+++') || l.startsWith('---') ? 'text-slate-400 font-bold' : l.startsWith('+') ? 'text-emerald-300 bg-emerald-500/10' : l.startsWith('-') ? 'text-red-300 bg-red-500/10' : l.startsWith('@@') ? 'text-violet-300' : 'text-slate-400';
+    return `<div class="${c} px-2">${esc(l) || ' '}</div>`;
+  }).join('');
+}
+function showPR(pr) {
+  $('prTitle').textContent = pr.title;
+  $('prMeta').textContent = pr.simulated ? `simulated · branch ${pr.branch} · ${pr.error || ''}` : `opened · ${pr.url}`;
+  $('prLink').classList.toggle('hidden', !pr.url); if (pr.url) $('prLink').href = pr.url;
+  $('prClose').classList.toggle('ml-auto', !pr.url);
+  $('prBody').textContent = pr.body;
+  $('prDiff').innerHTML = colorDiff(pr.diff);
+  $('prModal').classList.remove('hidden');
+}
+$('prClose').onclick = () => $('prModal').classList.add('hidden');
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('prModal').classList.add('hidden'); });
+$('prModal').onclick = (e) => { if (e.target.id === 'prModal') $('prModal').classList.add('hidden'); };
+document.querySelectorAll('.prtab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.prtab').forEach(x => { x.classList.toggle('border-cyan-400', x === t); x.classList.toggle('text-slate-100', x === t); x.classList.toggle('border-transparent', x !== t); x.classList.toggle('text-slate-400', x !== t); });
+  $('prBody').classList.toggle('hidden', t.dataset.tab !== 'body');
+  $('prDiff').classList.toggle('hidden', t.dataset.tab !== 'diff');
+});
+
+// ============================================================ battle stream (SSE)
+const LEVEL = {
+  danger:  { icon: 'octagon-alert', c: 'text-red-400', b: 'border-red-500/30 bg-red-500/[.05]' },
+  warn:    { icon: 'triangle-alert', c: 'text-amber-400', b: 'border-amber-500/30 bg-amber-500/[.05]' },
+  success: { icon: 'circle-check', c: 'text-emerald-400', b: 'border-emerald-500/25 bg-emerald-500/[.04]' },
+  info:    { icon: 'info', c: 'text-sky-400', b: 'border-ink-700 bg-ink-850' },
+  surgeon: { icon: 'stethoscope', c: 'text-cyan-300', b: 'border-cyan-500/30 bg-cyan-500/[.05]' },
+  breaker: { icon: 'bug', c: 'text-rose-300', b: 'border-rose-500/30 bg-rose-500/[.05]' },
+};
+const TYPE_ICON = { 'shield.up': 'shield-check', 'incident.detected': 'siren', 'test.repro': 'flask-conical', 'chaos.toggled': 'flame',
+  'replay.summary': 'radio-tower', 'twin.found': 'scan-search', 'twin.vaccinated': 'syringe', 'incident.verified': 'badge-check',
+  'incident.deployed': 'rocket', 'pr.opened': 'git-pull-request', 'round.result': 'swords', 'system.reset': 'rotate-ccw' };
+
+function addStreamRow(ev) {
+  $('emptyStream')?.remove();
+  const lv = LEVEL[ev.level] || LEVEL.info;
+  const big = ['incident.detected', 'shield.up', 'round.result', 'replay.summary', 'incident.verified', 'incident.deployed'].includes(ev.type);
+  const compactable = ev.type === 'replay.request' || ev.type === 'test.result';
+  const t = new Date(ev.ts * 1000).toLocaleTimeString([], { hour12: false });
+  const row = document.createElement('div');
+  row.className = `ev rounded-lg border ${lv.b} ${big ? 'px-3 py-2.5' : 'px-3 py-1.5'} ${compactable ? 'compactable' : ''}`;
+  if (compactable && $('hideReplay').checked) row.style.display = 'none';
+  let extra = '';
+  if (ev.type === 'patch.proposed') extra = `<pre class="code mt-2 p-2 rounded bg-ink-950 border border-ink-700 overflow-x-auto scroll text-cyan-100/90">${esc(ev.patch)}</pre>`;
+  if (ev.type === 'breaker.tests') extra = `<details class="mt-1.5"><summary class="text-[10.5px] text-rose-300 cursor-pointer">view adversarial tests</summary><pre class="code mt-2 p-2 rounded bg-ink-950 border border-ink-700 overflow-x-auto scroll text-rose-100/90">${esc(ev.tests)}</pre></details>`;
+  if (ev.type === 'test.repro') extra = `<details class="mt-1.5"><summary class="text-[10.5px] text-slate-400 cursor-pointer">view generated repro test</summary><pre class="code mt-2 p-2 rounded bg-ink-950 border border-ink-700 overflow-x-auto scroll">${esc(ev.test)}</pre></details>`;
+  const src = ev.source && ev.source !== 'none' ? `<span class="ml-1.5 text-[9.5px] font-mono px-1 py-px rounded ${ev.source === 'claude' ? 'bg-violet-500/20 text-violet-300' : 'bg-ink-700 text-slate-400'}">${ev.source}</span>` : '';
+  row.innerHTML = `
+    <div class="flex items-start gap-2.5">
+      <i data-lucide="${TYPE_ICON[ev.type] || lv.icon}" class="w-${big ? 4 : 3.5} h-${big ? 4 : 3.5} mt-0.5 shrink-0 ${lv.c}"></i>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-baseline gap-2">
+          <span class="${big ? 'text-[13px] font-semibold' : 'text-[12px] font-medium'} ${compactable ? 'font-mono' : ''} text-slate-100">${esc(ev.title)}</span>${src}
+          <span class="ml-auto text-[10px] font-mono text-slate-600 shrink-0">${ev.incident_id ? esc(ev.incident_id) + ' · ' : ''}${t}</span>
+        </div>
+        ${ev.detail ? `<div class="text-[11.5px] text-slate-400 mt-0.5 break-words ${compactable ? 'font-mono text-[10.5px]' : ''}">${esc(ev.detail)}</div>` : ''}
+        ${extra}
+      </div>
+    </div>`;
+  const s = $('stream');
+  const atBottom = s.scrollHeight - s.scrollTop - s.clientHeight < 120;
+  s.appendChild(row);
+  lucide.createIcons({ nodes: [row] });
+  if (atBottom) s.scrollTop = s.scrollHeight;
+}
+$('hideReplay').onchange = () => document.querySelectorAll('.compactable').forEach(r => r.style.display = $('hideReplay').checked ? 'none' : '');
+
+function setTyping(ev) {
+  const el = $('agentTyping');
+  if (!ev) { el.classList.add('hidden'); return; }
+  const surgeon = ev.agent === 'surgeon';
+  el.className = `px-4 py-2 text-xs border-b border-ink-700 ${surgeon ? 'bg-cyan-500/[.06] text-cyan-200' : 'bg-rose-500/[.06] text-rose-200'} flex items-center gap-2`;
+  el.innerHTML = `<i data-lucide="${surgeon ? 'stethoscope' : 'bug'}" class="w-3.5 h-3.5"></i><span>${esc(ev.title)}</span><span class="typing font-bold"><span>.</span><span>.</span><span>.</span></span>`;
+  icons();
+}
+
+function handleEvent(ev) {
+  if (ev.type === 'system.reset') { resetUI(); addStreamRow(ev); return; }
+  addStreamRow(ev);
+  const id = ev.incident_id;
+  if (!id) return;
+  const u = ensureInc(id);
+  if (ev.stage && STAGES.some(s => s[0] === ev.stage)) u.stage = ev.stage;
+  switch (ev.type) {
+    case 'incident.detected': u.status = 'detected'; u.meta = `${ev.incident.module}.py · ${ev.incident.function}()`; focus(id); break;
+    case 'shield.up': u.status = 'shielded'; break;
+    case 'agent.thinking': setTyping(ev); break;
+    case 'patch.proposed': setTyping(null); u.status = 'healing'; u.diff = ev.diff_rows; u.meta = `${ev.file} · round ${ev.round} · ${ev.source}`; if (ev.detail) u.diagnosis = ev.detail; break;
+    case 'breaker.tests': setTyping(null); break;
+    case 'replay.request': u.replay.push({ ok: ev.ok, kind: ev.kind, title: ev.title, detail: ev.detail }); break;
+    case 'replay.summary': u.summary = ev.replay; break;
+    case 'twin.found': case 'twin.vaccinated': case 'twin.failed': u.twins[ev.twin.id] = ev.twin; break;
+    case 'incident.verified': u.status = 'verified'; setTyping(null); break;
+    case 'incident.deployed': u.status = 'deployed'; u.stage = 'deployed'; break;
+    case 'incident.escalated': u.status = 'escalated'; u.failed = true; setTyping(null); break;
+    case 'pr.opened': u.pr = ev.pr; break;
+  }
+  if (id === focusId) renderRight();
+  renderIncTabs();
+}
+
+function resetUI() {
+  for (const k in incs) delete incs[k];
+  focusId = null;
+  $('stream').innerHTML = '';
+  $('diff').innerHTML = '<div class="p-6 text-center text-xs text-slate-600">The Surgeon\'s patch will appear here as a side-by-side diff.</div>';
+  $('diagnosis').classList.add('hidden'); $('patchMeta').textContent = '';
+  $('replayDots').innerHTML = ''; $('gaugeRing').style.strokeDashoffset = 263.9; $('gaugePct').textContent = '-';
+  $('replaySummary').textContent = 'Waiting for a candidate patch';
+  $('twinPanel').classList.add('hidden'); $('verdict').className = 'text-xs text-slate-500 mb-3'; $('verdict').textContent = 'No incident yet.';
+  $('deployBtn').disabled = $('prBtn').disabled = true;
+  setTyping(null); renderPipeline(null); renderIncTabs();
+}
+
+function connect() {
+  const es = new EventSource('/api/stream');
+  es.onopen = () => { $('sseBadge').textContent = 'SSE ● live'; $('sseBadge').className = 'px-2.5 py-1 rounded-md bg-ink-800 border border-emerald-500/40 text-[11px] font-mono text-emerald-300'; };
+  es.onerror = () => { $('sseBadge').textContent = 'SSE ○ reconnecting'; $('sseBadge').className = 'px-2.5 py-1 rounded-md bg-ink-800 border border-red-500/40 text-[11px] font-mono text-red-300'; };
+  es.onmessage = (m) => { try { handleEvent(JSON.parse(m.data)); } catch (e) { console.error(e); } };
+}
+
+$('resetBtn').onclick = async () => {
+  await api('/api/reset');
+  for (let i = 0; i < MAX_TICKS; i++) chart.data.datasets.forEach(d => d.data[i] = 0);
+  chart.update(); pollState();
+};
+
+// ============================================================ boot
+renderPipeline(null);
+icons();
+pollState();
+connect();
+</script>
+</body>
+</html>
