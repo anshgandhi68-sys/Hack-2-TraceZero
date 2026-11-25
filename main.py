@@ -21,6 +21,7 @@ load_dotenv()  # must run before agent_engine reads env vars
 
 from fastapi import FastAPI, HTTPException, Request  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from agent_engine import MODEL, TraceZero  # noqa: E402
 
@@ -208,6 +209,24 @@ async def reset():
     return {"ok": True}
 
 
-@app.get("/")
-def index():
-    return FileResponse(BASE_DIR / "index.html")
+# ------------------------------ website -----------------------------------
+PAGES = {
+    "/": "index.html",
+    "/warroom": "warroom.html",
+    "/how-it-works": "how-it-works.html",
+    "/store": "store.html",
+    "/about": "about.html",
+}
+
+
+def _page(filename: str):
+    def handler():
+        return FileResponse(BASE_DIR / "pages" / filename, headers={"Cache-Control": "no-cache"})
+    handler.__name__ = f"page_{filename.split('.')[0].replace('-', '_')}"
+    return handler
+
+
+for route, filename in PAGES.items():
+    app.get(route, include_in_schema=False)(_page(filename))
+
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TraceZero — Break it. Watch it heal.</title>
+<meta name="description" content="TraceZero shields users from production crashes in milliseconds, lets two AI agents battle over the fix, proves it on real traffic and ships it with one click.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23F64302'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/static/tw.js"></script>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600..900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+</head>
+<body data-splash="true" data-nav-overlay="true" class="text-white">
+<div class="relative">
+
+  <!-- fixed moving background -->
+  <div class="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
+    <canvas data-fx="atmosphere" data-dpr="1" class="w-full h-full"></canvas>
+    <div class="absolute inset-0 bg-black/30"></div>
+  </div>
+
+  <div id="site-nav"></div>
+
+  <!-- ================= HERO ================= -->
+  <section id="overview" data-reveal data-reveal-on="ready" class="relative z-10 w-full h-screen min-h-[620px] flex flex-col">
+    <div class="flex-1 flex flex-col items-center text-center pt-40 sm:pt-52 px-4">
+      <p class="r-up text-xs sm:text-sm uppercase tracking-[0.3em] text-white/70 mb-10 sm:mb-16" style="--d:300ms">Autonomous incident response</p>
+      <h1 class="r-up font-bubbledot text-[44px] sm:text-6xl md:text-7xl lg:text-[104px] leading-[.95] tracking-tight text-white" style="--d:500ms">Break it.<br>Watch it heal.</h1>
+    </div>
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 px-4 sm:px-6 lg:px-10 pb-8 sm:pb-12">
+      <div class="r-up max-w-sm" style="--d:700ms">
+        <p class="text-xs sm:text-sm text-white/60 leading-relaxed">Shield users in milliseconds, let two AI agents fight over the fix, and ship it only when real traffic proves it, before the outage becomes a headline.</p>
+        <p id="heroLive" class="mt-4 text-[11px] text-white/40 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent pulse-dot"></span>live · connecting to production…</p>
+      </div>
+      <a href="/warroom" class="r-up cta self-start sm:self-auto" style="--d:900ms" aria-label="Open the War Room live dashboard">
+        <span class="chip">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </span>Open the War Room</a>
+    </div>
+  </section>
+
+  <!-- ================= STORY (pale) ================= -->
+  <section id="story" data-theme="light" data-reveal class="relative z-10 min-h-screen overflow-hidden bg-pale text-black">
+    <div class="absolute inset-0" aria-hidden="true"><canvas data-fx="paleflow" class="w-full h-full"></canvas></div>
+    <div class="relative min-h-screen px-4 sm:px-6 lg:px-10 pt-28 pb-10 sm:pb-16 flex flex-col justify-between gap-16">
+      <div class="max-w-xs sm:max-w-sm">
+        <p class="r-up text-xs sm:text-sm text-black/80 leading-relaxed" style="--d:100ms">TraceZero turns a live production crash into a shared, verified picture of what broke, who it hit, and why the fix is safe to ship.</p>
+        <a href="/store" class="r-up cta light mt-6" style="--d:250ms" aria-label="Open the live store and break it">
+          <span class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>Break the Live Store</a>
+      </div>
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-10">
+        <h2 class="r-up max-w-md text-2xl sm:text-3xl lg:text-4xl font-medium leading-snug" style="--d:400ms">Meet TraceZero. Built to <span class="text-black/40">shield every user</span> and prove every fix.</h2>
+        <p class="r-up max-w-lg md:text-right text-xl sm:text-2xl lg:text-3xl font-medium leading-snug" style="--d:550ms">Follow one crash and see how <span class="text-black/40">a stack trace</span> becomes <b class="font-bold">a verified fix</b>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SIGNAL BENTO ================= -->
+  <section id="signals" data-theme="light" data-reveal class="relative z-10 w-full min-h-screen md:h-screen bg-bento p-2 sm:p-3">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-3 h-full">
+
+      <!-- Column 1: topography -->
+      <article class="r-scale relative rounded-2xl overflow-hidden min-h-[500px] md:min-h-0" style="--d:100ms">
+        <div class="absolute inset-0" role="img" aria-label="Monochrome topographic field with layered contour lines"><canvas data-fx="topo" class="w-full h-full"></canvas></div>
+        <div class="relative h-full flex flex-col justify-between p-5 sm:p-6 text-black">
+          <div class="r-up" style="--d:300ms">
+            <div class="font-bubbledot text-5xl sm:text-6xl text-black/80">01</div>
+            <p class="mt-4 text-xs sm:text-sm text-black/70 max-w-xs leading-relaxed">A shield that turns a crash into a graceful response in about 250 milliseconds, before anyone is paged.</p>
+          </div>
+          <div class="flex flex-col gap-2">
+            <a href="/how-it-works" class="r-up group flex items-center justify-between gap-3 bg-card rounded-xl pl-4 py-2 pr-2" style="--d:450ms" aria-label="How the Instant Shield works">
+              <span class="text-[11px] sm:text-[13px] text-black">From stack trace to safe response</span>
+              <span class="arrow-sq"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
+            </a>
+            <div class="grid grid-cols-5 gap-2">
+              <div class="r-up col-span-3 bg-card rounded-xl p-4" style="--d:550ms">
+                <p class="text-[11px] sm:text-xs text-black/70 leading-relaxed">The question is not who broke it, but how fast users stop feeling it.</p>
+                <div class="font-bubbledot text-4xl text-black mt-3">Shield</div>
+              </div>
+              <div class="r-up col-span-2 flex items-end justify-end" style="--d:650ms">
+                <div class="font-bubbledot text-4xl text-black">S/01</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Column 2: particle field -->
+      <article class="r-scale relative rounded-2xl overflow-hidden min-h-[500px] md:min-h-0 text-white" style="--d:250ms">
+        <div class="absolute inset-0" aria-hidden="true"><canvas data-fx="particles" class="w-full h-full"></canvas></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-black/50" aria-hidden="true"></div>
+        <div class="relative h-full flex flex-col justify-between p-6 sm:p-8">
+          <div class="r-up" style="--d:450ms">
+            <p class="text-xs sm:text-sm text-white/70 leading-relaxed max-w-sm">The Surgeon writes the fix. The Breaker attacks it with adversarial tests. pytest referees, so you ship a patch that survived a fight, not a guess.</p>
+            <p class="mt-4 text-xs sm:text-sm text-white/70 leading-relaxed max-w-sm">Recent real traffic is replayed against every patch and diffed byte-for-byte, so "zero regressions" is evidence, not a promise.</p>
+            <div class="font-bubbledot text-5xl sm:text-6xl text-white mt-8">B/02</div>
+          </div>
+          <a href="/warroom" class="r-up group w-12 h-12 rounded-xl bg-accent text-white grid place-items-center btn" style="--d:600ms" aria-label="Watch the Surgeon versus Breaker battle in the War Room">
+            <span class="arrow-sq !bg-transparent"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
+          </a>
+        </div>
+      </article>
+
+      <!-- Column 3: lens -->
+      <article class="r-scale bg-white rounded-2xl p-2 sm:p-3 flex flex-col gap-2 sm:gap-3 min-h-[500px] md:min-h-0" style="--d:400ms">
+        <div class="flex-1 flex flex-col gap-2 min-h-[220px]">
+          <div class="r-in relative flex-1 rounded-xl overflow-hidden min-h-[160px]" style="--d:550ms" aria-hidden="true"><canvas data-fx="radar" class="w-full h-full"></canvas></div>
+          <a href="/how-it-works#stage-vaccinate" class="r-up group flex items-center justify-between gap-3 bg-card rounded-xl pl-4 py-2 pr-2" style="--d:650ms" aria-label="How twin-bug vaccination works">
+            <span class="text-[11px] sm:text-[13px] text-black">Same bug, every service, one scan</span>
+            <span class="arrow-sq"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>
+          </a>
+        </div>
+        <div class="r-up flex-1 bg-card rounded-xl p-5 sm:p-6 flex flex-col justify-end text-black" style="--d:750ms">
+          <div class="font-bubbledot text-5xl sm:text-6xl">T/03</div>
+          <p class="text-xl sm:text-2xl leading-snug tracking-tight mt-2">Find the twin bug before the traffic does.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= PIPELINE (dark over atmosphere) ================= -->
+  <section id="pipeline" data-reveal class="relative z-10 px-4 sm:px-6 lg:px-10 py-24 sm:py-32 bg-black/55 backdrop-blur-[2px]">
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+      <div>
+        <p class="r-up text-xs sm:text-sm uppercase tracking-[0.3em] text-white/60" style="--d:0ms">The immune response</p>
+        <h2 class="r-up font-bubbledot text-4xl sm:text-6xl lg:text-7xl leading-[.95] mt-6" style="--d:120ms">Six stages.<br>One click.</h2>
+      </div>
+      <p class="r-up max-w-md text-xs sm:text-sm text-white/60 leading-relaxed" style="--d:240ms">Every stage streams live to the War Room. Everything TraceZero does on its own is reversible. The one step that isn't waits for a human.</p>
+    </div>
+    <div class="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3" id="stageGrid"></div>
+  </section>
+
+  <!-- ================= LIVE NUMBERS (pale) ================= -->
+  <section id="live" data-theme="light" data-reveal class="relative z-10 bg-pale text-black px-4 sm:px-6 lg:px-10 py-20 sm:py-28">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div>
+        <p class="r-up eyebrow-dark">Live from this server</p>
+        <h2 class="r-up mt-5 text-2xl sm:text-3xl lg:text-4xl font-medium leading-snug max-w-xl" style="--d:120ms">Not a mockup. <span class="text-black/40">These numbers update</span> as the demo runs.</h2>
+      </div>
+      <a href="/store" class="r-up cta" style="--d:240ms"><span class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>Move the numbers</a>
+    </div>
+    <div class="mt-14 grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+      <div class="r-scale bg-white rounded-2xl p-5 sm:p-6" style="--d:100ms"><div class="text-[11px] uppercase tracking-[.25em] text-black/45">Requests served</div><div id="nReq" class="font-bubbledot text-5xl sm:text-7xl mt-6">0</div></div>
+      <div class="r-scale bg-white rounded-2xl p-5 sm:p-6" style="--d:200ms"><div class="text-[11px] uppercase tracking-[.25em] text-black/45">Users shielded</div><div id="nProt" class="font-bubbledot text-5xl sm:text-7xl mt-6 text-accent">0</div></div>
+      <div class="r-scale bg-white rounded-2xl p-5 sm:p-6" style="--d:300ms"><div class="text-[11px] uppercase tracking-[.25em] text-black/45">Incidents healed</div><div id="nHeal" class="font-bubbledot text-5xl sm:text-7xl mt-6">0</div></div>
+      <div class="r-scale bg-black text-white rounded-2xl p-5 sm:p-6" style="--d:400ms"><div class="text-[11px] uppercase tracking-[.25em] text-white/50">Time to shield</div><div id="nShield" class="font-bubbledot text-5xl sm:text-7xl mt-6">--</div></div>
+    </div>
+  </section>
+
+  <!-- ================= BEFORE / AFTER (bento) ================= -->
+  <section id="compare" data-theme="light" data-reveal class="relative z-10 bg-bento p-2 sm:p-3">
+    <div class="grid md:grid-cols-2 gap-2 sm:gap-3">
+      <div class="r-scale bg-card rounded-2xl p-6 sm:p-10 text-black" style="--d:100ms">
+        <div class="flex items-center justify-between"><p class="eyebrow-dark">Manual on-call</p><span class="font-bubbledot text-4xl text-black/30">03:00</span></div>
+        <ul class="mt-10 space-y-5 text-sm sm:text-base text-black/55" id="manualList"></ul>
+      </div>
+      <div class="r-scale bg-black rounded-2xl p-6 sm:p-10 text-white" style="--d:250ms">
+        <div class="flex items-center justify-between"><p class="text-xs sm:text-sm uppercase tracking-[0.3em] text-white/60">TraceZero</p><span class="font-bubbledot text-4xl text-accent">00:01</span></div>
+        <ul class="mt-10 space-y-5 text-sm sm:text-base" id="tzList"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINAL CTA ================= -->
+  <section data-reveal class="relative z-10 px-4 sm:px-6 lg:px-10 py-28 sm:py-40 text-center bg-black/40">
+    <p class="r-up text-xs sm:text-sm uppercase tracking-[0.3em] text-white/60">Try it in under a minute</p>
+    <h2 class="r-up font-bubbledot text-4xl sm:text-6xl lg:text-8xl leading-[.95] mt-8" style="--d:150ms">Your next outage<br>is a demo.</h2>
+    <div class="r-up mt-12 flex flex-wrap justify-center gap-3" style="--d:300ms">
+      <a href="/warroom" class="cta"><span class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>Open the War Room</a>
+      <a href="/store" class="cta light"><span class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span>Break the Live Store</a>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+</div>
+
+<script>
+// ---- pipeline cards
+const STAGES = [
+  ['01', 'Instant Shield', '~250 ms', 'Fingerprints the crash and arms a reversible guardrail. Users get a graceful response, not a 500.'],
+  ['02', 'Red test', '~1 s', 'The exact production payload becomes a failing pytest in an isolated sandbox. Proof first, code second.'],
+  ['03', 'Surgeon vs Breaker', '2–3 rounds', 'One agent patches, one agent attacks the patch. pytest referees until a patch survives.'],
+  ['04', 'Shadow replay', '16 requests', 'Real recent traffic is replayed and diffed byte-for-byte against what production returned.'],
+  ['05', 'Twin vaccination', 'AST scan', 'Finds the same anti-pattern in sibling services and pre-patches it before it ever crashes.'],
+  ['06', 'Deploy + PR', 'one click', 'A human approves. Hot-swap with zero downtime, shield retires, PR opens with a full postmortem.'],
+];
+document.getElementById('stageGrid').innerHTML = STAGES.map(([n, t, time, d], i) => `
+  <div class="r-up group rounded-2xl border border-white/10 bg-white/[.03] hover:bg-white/[.06] transition-colors p-5 sm:p-6 min-h-[220px] flex flex-col justify-between" style="--d:${150 + i * 80}ms">
+    <div class="flex items-start justify-between"><span class="font-bubbledot text-5xl text-accent">${n}</span><span class="text-[10.5px] uppercase tracking-[.2em] text-white/40 mt-2">${time}</span></div>
+    <div><h3 class="text-base sm:text-lg font-semibold">${t}</h3><p class="mt-2 text-xs sm:text-[13px] text-white/55 leading-relaxed">${d}</p></div>
+  </div>`).join('');
+
+// ---- before / after
+const ROWS = [
+  ['Users see 500s until a fix ships', 'Users are shielded in milliseconds'],
+  ['Bug reproduced by hand, maybe', 'Reproduced from the exact production payload'],
+  ['Fix tested against the one failing case', 'Adversarial tests + real traffic replay'],
+  ['Same bug waits in a sibling service', 'Twins found and vaccinated now'],
+  ['Postmortem written days later', 'PR with timeline, tests and evidence'],
+];
+const X = '<svg class="w-4 h-4 mt-1 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+const V = '<svg class="w-4 h-4 mt-1 shrink-0 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+document.getElementById('manualList').innerHTML = ROWS.map(r => `<li class="flex gap-3">${X}<span>${r[0]}</span></li>`).join('');
+document.getElementById('tzList').innerHTML = ROWS.map(r => `<li class="flex gap-3">${V}<span>${r[1]}</span></li>`).join('');
+
+// ---- live numbers
+window.addEventListener('tz:state', ({ detail: s }) => {
+  const set = (id, v) => { const el = document.getElementById(id); if (el.textContent !== String(v)) el.textContent = v; };
+  set('nReq', s.stats.requests.toLocaleString());
+  set('nProt', s.stats.shielded.toLocaleString());
+  set('nHeal', s.mttr.deployed);
+  set('nShield', s.mttr.avg_shield_ms != null ? `${Math.round(s.mttr.avg_shield_ms)}ms` : '--');
+  const open = s.incidents.filter(i => i.status !== 'deployed');
+  const healing = open.filter(i => i.status !== 'verified').length, ready = open.length - healing;
+  const tail = healing ? `${healing} healing now` : ready ? `${ready} fix${ready > 1 ? 'es' : ''} awaiting approval` : 'all systems healthy';
+  document.getElementById('heroLive').innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${open.length ? 'bg-amber-400' : 'bg-accent'} pulse-dot"></span>live · ${s.stats.requests.toLocaleString()} requests · ${s.stats.shielded} shielded · ${tail}`;
+});
+</script>
+<script src="/static/site.js"></script>
+<script src="/static/fx.js"></script>
+</body>
+</html>

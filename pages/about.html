@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · TraceZero</title>
+<meta name="description" content="Why we built TraceZero, the principles behind it, the stack, and answers to common questions.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%23a78bfa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M16 7l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10v-5z' fill='%2307080c'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/static/tw.js"></script>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600..900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<style>details[open] .chev { transform: rotate(180deg); } summary::-webkit-details-marker { display: none; }</style>
+</head>
+<body class="text-slate-200">
+<div class="fixed inset-0 z-0 pointer-events-none" aria-hidden="true"><canvas data-fx="atmosphere" data-dpr="1" class="w-full h-full"></canvas><div class="absolute inset-0 bg-black/55"></div></div>
+<div class="relative z-10">
+<div id="site-nav"></div>
+
+<section class="relative overflow-hidden">
+  
+  <div class="relative max-w-4xl mx-auto px-5 pt-20 pb-10">
+    <div class="eyebrow">About</div>
+    <h1 class="mt-6 font-bubbledot text-4xl md:text-6xl leading-[.95] tracking-tight text-white">Software should have an <span class="grad-text">immune system</span>, not just an alarm.</h1>
+    <p class="mt-6 text-lg text-slate-400 leading-relaxed">Monitoring tells you something broke. Then a human wakes up, reads a stack trace, guesses a fix and hopes. We wanted to know what happens if the system can protect itself first, fix itself properly, and only ask a human for the final decision.</p>
+  </div>
+</section>
+
+<section class="max-w-4xl mx-auto px-5 py-10 grid md:grid-cols-3 gap-4">
+  <div class="reveal panel p-6"><div class="text-4xl font-bubbledot text-accent">Protect</div><p class="text-sm text-slate-400 mt-2">Stop user impact first. Diagnose second.</p></div>
+  <div class="reveal panel p-6"><div class="text-4xl font-bubbledot text-accent">Prove</div><p class="text-sm text-slate-400 mt-2">Adversarial tests and real traffic, not vibes.</p></div>
+  <div class="reveal panel p-6"><div class="text-4xl font-bubbledot text-accent">Prevent</div><p class="text-sm text-slate-400 mt-2">Find every twin before it becomes the next outage.</p></div>
+</section>
+
+<section class="max-w-4xl mx-auto px-5 py-12">
+  <div class="reveal">
+    <div class="eyebrow">The story</div>
+    <h2 class="mt-3 text-3xl font-bold tracking-tight">Built in four hours, on purpose.</h2>
+    <div class="mt-5 space-y-4 text-slate-400 leading-relaxed">
+      <p>TraceZero started as a hackathon question: could we make the most stressful part of running software, the incident, feel boring?</p>
+      <p>The constraint shaped the design. One Python process, one HTML file per page, no Docker and no build step. Patches are hot-swapped in memory so the demo can't restart under us, and an offline playbook mode means it works with no Wi-Fi.</p>
+      <p>The bugs in the demo store are deliberately ordinary: a division with no zero check and a string method on a value that can be null. Most real outages look exactly like this.</p>
+    </div>
+  </div>
+</section>
+
+<section class="max-w-4xl mx-auto px-5 py-10">
+  <div class="reveal">
+    <div class="eyebrow">Under the hood</div>
+    <h2 class="mt-3 text-3xl font-bold tracking-tight">The stack</h2>
+  </div>
+  <div class="mt-8 grid sm:grid-cols-2 gap-4">
+    <div class="reveal panel p-5 flex gap-4"><i data-lucide="zap" class="w-5 h-5 text-accent shrink-0"></i><div><div class="font-semibold">FastAPI + SSE</div><p class="text-sm text-slate-400 mt-1">The target API, the immune layer and a live event stream in one async process.</p></div></div>
+    <div class="reveal panel p-5 flex gap-4"><i data-lucide="sparkles" class="w-5 h-5 text-white/80 shrink-0"></i><div><div class="font-semibold">Claude</div><p class="text-sm text-slate-400 mt-1">Powers the Surgeon, the Breaker and the twin vaccines in live mode.</p></div></div>
+    <div class="reveal panel p-5 flex gap-4"><i data-lucide="flask-conical" class="w-5 h-5 text-emerald-300 shrink-0"></i><div><div class="font-semibold">pytest in a sandbox</div><p class="text-sm text-slate-400 mt-1">Temp-dir isolation and junit XML results, cross-platform down to Windows PowerShell.</p></div></div>
+    <div class="reveal panel p-5 flex gap-4"><i data-lucide="binary" class="w-5 h-5 text-amber-300 shrink-0"></i><div><div class="font-semibold">Python AST</div><p class="text-sm text-slate-400 mt-1">Twin-bug scanning by code structure, not by grepping text.</p></div></div>
+    <div class="reveal panel p-5 flex gap-4"><i data-lucide="git-pull-request" class="w-5 h-5 text-pink-300 shrink-0"></i><div><div class="font-semibold">PyGithub</div><p class="text-sm text-slate-400 mt-1">Branch, commit and PR with an auto-generated postmortem.</p></div></div>
+    <div class="reveal panel p-5 flex gap-4"><i data-lucide="palette" class="w-5 h-5 text-sky-300 shrink-0"></i><div><div class="font-semibold">Tailwind + Chart.js + Lucide</div><p class="text-sm text-slate-400 mt-1">The whole UI from CDNs, with zero build tooling.</p></div></div>
+  </div>
+</section>
+
+<section id="faq" class="max-w-4xl mx-auto px-5 py-14 scroll-mt-20">
+  <div class="reveal">
+    <div class="eyebrow">FAQ</div>
+    <h2 class="mt-3 text-3xl font-bold tracking-tight">Questions judges ask</h2>
+  </div>
+  <div class="mt-8 space-y-3" id="faqList"></div>
+</section>
+
+<section class="max-w-4xl mx-auto px-5 pt-6">
+  <div class="reveal panel p-8 text-center glow-cyan">
+    <h2 class="text-2xl font-bold">Read the code. Break the store. Watch it heal.</h2>
+    <div class="mt-6 flex flex-wrap gap-3 justify-center">
+      <a href="/warroom" class="btn btn-primary px-5 py-2.5 rounded-xl flex items-center gap-2"><i data-lucide="radar" class="w-4 h-4"></i>War Room</a>
+      <a href="https://github.com/anshgandhi68-sys/Hack-2-TraceZero" target="_blank" rel="noopener" class="btn btn-ghost px-5 py-2.5 rounded-xl flex items-center gap-2"><i data-lucide="github" class="w-4 h-4"></i>GitHub</a>
+    </div>
+  </div>
+</section>
+
+</div>
+<div id="site-footer"></div>
+<script>
+const FAQ = [
+  ['Isn\'t it dangerous to let AI patch production?', 'That\'s why it doesn\'t do it alone. Shields are reversible and only catch one fingerprint. Patches must survive adversarial tests and byte-for-byte traffic replay. Deploying needs a human click, and every fix lands as a reviewable PR.'],
+  ['What does the shield actually return?', 'A graceful fallback instead of a 500. In the demo, checkout accepts the order in safe mode (HTTP 202) and finalizes pricing later. In a real system you configure the fallback per route: cached response, queue for retry, or a friendly error.'],
+  ['What if the agents can\'t agree on a fix?', 'After three rounds with no surviving patch, the incident escalates to a human and the shield stays up. Users stay protected while a person takes over, with the red test and Breaker\'s tests already written.'],
+  ['Does it need an internet connection or API key?', 'No. Without a key it runs a deterministic playbook that shows the whole flow offline. With ANTHROPIC_API_KEY set, Claude writes the patches and tests, and any failed call falls back to the playbook for that step.'],
+  ['Why "shadow traffic replay" and not just tests?', 'Tests prove the bug is gone. Replay proves nothing else changed. The last 15 real requests are re-run against the patch and compared with production\'s actual output, so even a one-cent difference is flagged.'],
+  ['How does it find twin bugs?', 'It classifies the crash (for example "string method on a value that can be None") and walks the Python AST of every protected service, looking for the same pattern with no guard nearby. Matches are patched and fired at with poison input before staging.'],
+  ['Does hot-deploy restart the server?', 'No. The patched module is compiled and swapped into the running process in memory, so in-flight traffic and the live event stream keep going. The permanent change goes through git via the PR.'],
+];
+document.getElementById('faqList').innerHTML = FAQ.map(([q, a]) => `
+  <details class="reveal panel group">
+    <summary class="cursor-pointer list-none p-5 flex items-center gap-4 font-semibold"><span class="flex-1">${q}</span><i data-lucide="chevron-down" class="chev w-4 h-4 text-slate-500 transition-transform"></i></summary>
+    <div class="px-5 pb-5 -mt-1 text-sm text-slate-400 leading-relaxed">${a}</div>
+  </details>`).join('');
+</script>
+<script src="/static/site.js"></script>
+<script src="/static/fx.js"></script>
+</body>
+</html>

@@ -29,7 +29,15 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-Open http://127.0.0.1:8000. Wait about 10s so the shadow buffer can fill, then press **Inject chaos bug 1**.
+Open http://127.0.0.1:8000.
+
+| Page | What it is |
+|---|---|
+| `/` | Landing page: splash iris reveal, live numbers, pipeline, before/after |
+| `/warroom` | Live incident dashboard. Wait ~10s for the shadow buffer, then **Inject chaos bug 1** |
+| `/store` | NovaMart storefront on the real checkout API. Check out an empty cart to cause a real crash |
+| `/how-it-works` | Stage-by-stage deep dive, safety model, API reference |
+| `/about` | Story, stack, FAQ |
 
 ## Modes
 
@@ -44,13 +52,16 @@ Copy `.env.example` to `.env` to configure. A real PR needs `GITHUB_TOKEN` + `GI
 
 | File | Role |
 |---|---|
-| `main.py` | FastAPI: `/shop/*` target API behind the TraceZero immune layer, `/api/*` control plane + SSE, `/` UI |
+| `main.py` | FastAPI: `/shop/*` target API behind the TraceZero immune layer, `/api/*` control plane + SSE, website routes |
 | `agent_engine.py` | Healing pipeline: event bus, shields, Surgeon/Breaker, pytest sandbox, shadow replay, AST twin scanner, hot-swap runtime, PR builder |
-| `store_logic.py` | Target checkout service with 2 latent bugs |
-| `refund_logic.py` | Sibling service with the twin bugs |
-| `index.html` | Single-file War Room UI (Tailwind + Chart.js + Lucide via CDN) |
+| `store_logic.py` / `refund_logic.py` | Target services with the latent bugs and their twins |
+| `pages/*.html` | The website: landing, War Room, store, how it works, about |
+| `static/site.js` · `site.css` · `tw.js` | Shared design system: splash iris, fixed nav and mobile menu, footer, reveal choreography, tokens |
+| `static/fx.js` | Procedural moving imagery (atmosphere, topography, particle field, radar), rendered in canvas with no video files |
 
 ## Design notes
+
+- **Design language:** dark editorial sections over full-bleed moving imagery, pale information sections, JetBrains Mono UI type, Doto dot-matrix display numerals and a single `#F64302` action accent. Everything respects `prefers-reduced-motion`.
 
 - **Patches are hot-swapped in memory** and never written to disk. `uvicorn --reload` therefore never restarts mid-demo, and **Reset demo** restores the original buggy code at any time.
 - **The pytest sandbox** uses `tempfile.TemporaryDirectory`, `sys.executable -m pytest` and junit XML, with `subprocess.run` in a worker thread. It behaves the same on macOS, Linux and Windows PowerShell, where asyncio subprocesses break under uvicorn's reload loop.

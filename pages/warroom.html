@@ -8,13 +8,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600..900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
 tailwind.config = { theme: { extend: {
-  fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'ui-monospace', 'monospace'] },
-  colors: { ink: { 950: '#07080c', 900: '#0b0d13', 850: '#10131b', 800: '#151923', 700: '#1e2330', 600: '#2a3142' } }
+  fontFamily: { sans: ['"JetBrains Mono"', 'ui-monospace', 'monospace'], mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'], bubbledot: ['Doto', 'monospace'] },
+  colors: { accent: '#F64302', pale: '#f0eded', bento: '#E8E5E9', card: '#EBE8EB', ink: { 950: '#07080c', 900: '#0b0d13', 850: '#10131b', 800: '#151923', 700: '#1e2330', 600: '#2a3142' } },
 } } };
 </script>
+<link rel="stylesheet" href="/static/site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%23a78bfa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M16 7l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10v-5z' fill='%2307080c'/%3E%3C/svg%3E">
 <style>
   :root { --ok: #22c55e; --amber: #f59e0b; --red: #ef4444; --cyan: #22d3ee; --violet: #a78bfa; }
   html, body { background: #07080c; }
@@ -47,23 +49,20 @@ tailwind.config = { theme: { extend: {
 </head>
 <body class="text-slate-200 font-sans min-h-screen antialiased">
 <div class="scanline"></div>
+<div id="site-nav" class="relative z-20"></div>
 <div class="relative z-10 max-w-[1680px] mx-auto px-5 py-4 space-y-4">
 
   <!-- ===== Top bar ===== -->
-  <header class="flex items-center gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-violet-500 grid place-items-center shadow-lg shadow-cyan-500/20">
-        <i data-lucide="shield-plus" class="w-5 h-5 text-ink-950"></i>
-      </div>
-      <div>
-        <div class="text-lg font-bold tracking-tight">Trace<span class="text-cyan-400">Zero</span></div>
-        <div class="text-[11px] text-slate-500 -mt-0.5">The autonomous immune system for production code</div>
-      </div>
+<header class="flex flex-wrap items-center gap-4">
+    <div>
+      <div class="flex items-center gap-2 text-[11px] text-slate-500"><a href="/" class="hover:text-slate-300">TraceZero</a><i data-lucide="chevron-right" class="w-3 h-3"></i><span>War Room</span></div>
+      <h1 class="font-bubbledot text-3xl tracking-tight mt-1 leading-none">War Room</h1>
     </div>
-    <div id="sysStatus" class="ml-4 flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-semibold">
+    <div id="sysStatus" class="ml-2 flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-semibold">
       <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span><span id="sysStatusText">ALL SYSTEMS HEALTHY</span>
     </div>
     <div class="ml-auto flex items-center gap-2">
+      <a href="/store" target="_blank" class="btn px-3 py-1.5 rounded-md bg-ink-800 border border-ink-600 text-xs hover:border-slate-400 flex items-center gap-1.5"><i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>Open store</a>
       <span id="modeBadge" class="px-2.5 py-1 rounded-md bg-ink-800 border border-ink-600 text-[11px] font-mono text-violet-300">…</span>
       <span id="sseBadge" class="px-2.5 py-1 rounded-md bg-ink-800 border border-ink-600 text-[11px] font-mono text-slate-400">SSE …</span>
       <button id="resetBtn" class="btn px-3 py-1.5 rounded-md bg-ink-800 border border-ink-600 text-xs hover:border-slate-400 flex items-center gap-1.5">
@@ -329,7 +328,11 @@ function renderSystemStatus(s) {
   const el = $('sysStatus');
   let cls, text;
   if (raw) { cls = 'border-red-500/40 bg-red-500/10 text-red-300'; text = 'PRODUCTION INCIDENT: 500s LIVE'; }
-  else if (active.length) { cls = 'border-amber-500/40 bg-amber-500/10 text-amber-300'; text = `SHIELDED · ${active.length} INCIDENT${active.length > 1 ? 'S' : ''} HEALING`; }
+  else if (active.length) {
+    const ready = active.filter(i => i.status === 'verified').length;
+    cls = 'border-amber-500/40 bg-amber-500/10 text-amber-300';
+    text = ready === active.length ? `SHIELDED · ${ready} FIX${ready > 1 ? 'ES' : ''} AWAITING APPROVAL` : `SHIELDED · ${active.length - ready} INCIDENT${active.length - ready > 1 ? 'S' : ''} HEALING`;
+  }
   else { cls = 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'; text = s.incidents.length ? 'IMMUNE · ALL FIXES DEPLOYED' : 'ALL SYSTEMS HEALTHY'; }
   el.className = `ml-4 flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${cls}`;
   $('sysStatusText').textContent = text;
@@ -567,7 +570,15 @@ function setTyping(ev) {
   icons();
 }
 
+const PAGE_T0 = Date.now() / 1000;
+const TOASTS = {
+  'incident.detected': ['red', (e) => e.title, () => 'HTTP 500 hit production. Immune response started.'],
+  'shield.up': ['amber', (e) => e.title, () => 'Users now get safe-mode responses.'],
+  'incident.verified': ['cyan', () => 'Fix verified', (e) => e.detail],
+  'incident.deployed': ['green', (e) => e.title, () => 'Shield retired. Open the PR to land it in git.'],
+};
 function handleEvent(ev) {
+  if (ev.ts > PAGE_T0 && TOASTS[ev.type] && window.tzToast) { const [tone, t, b] = TOASTS[ev.type]; tzToast(t(ev), b(ev), tone); }
   if (ev.type === 'system.reset') { resetUI(); addStreamRow(ev); return; }
   addStreamRow(ev);
   const id = ev.incident_id;
@@ -624,5 +635,6 @@ icons();
 pollState();
 connect();
 </script>
+<script src="/static/site.js"></script>
 </body>
 </html>

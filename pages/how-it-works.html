@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works · TraceZero</title>
+<meta name="description" content="A stage-by-stage look at TraceZero's self-healing pipeline: shields, red tests, Surgeon vs Breaker, shadow replay and twin-bug vaccination.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%23a78bfa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M16 7l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10v-5z' fill='%2307080c'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/static/tw.js"></script>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@600..900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+</head>
+<body class="text-slate-200">
+<div class="fixed inset-0 z-0 pointer-events-none" aria-hidden="true"><canvas data-fx="atmosphere" data-dpr="1" class="w-full h-full"></canvas><div class="absolute inset-0 bg-black/55"></div></div>
+<div class="relative z-10">
+<div id="site-nav"></div>
+
+<section class="relative overflow-hidden">
+  
+  <div class="relative max-w-4xl mx-auto px-5 pt-20 pb-12 text-center">
+    <div class="eyebrow">How it works</div>
+    <h1 class="mt-6 font-bubbledot text-4xl md:text-6xl leading-[.95] tracking-tight text-white">Inside the <span class="grad-text">immune response</span></h1>
+    <p class="mt-5 text-lg text-slate-400">What TraceZero does from the moment a request crashes to the moment the fix lands in git, and why each step exists.</p>
+  </div>
+</section>
+
+<!-- ============ Architecture ============ -->
+<section class="max-w-6xl mx-auto px-5 py-10">
+  <div class="reveal panel p-6 md:p-8">
+    <div class="panel-h mb-6">Architecture</div>
+    <div class="grid md:grid-cols-[1fr_auto_1.3fr_auto_1fr] gap-4 items-stretch">
+      <div class="rounded-xl border border-ink-700 bg-ink-850 p-4">
+        <div class="flex items-center gap-2 font-semibold text-sm"><i data-lucide="globe" class="w-4 h-4 text-sky-400"></i>Real traffic</div>
+        <p class="text-xs text-slate-400 mt-2">Shoppers, the mobile app, partner APIs, all hitting <span class="font-mono">/shop/*</span></p>
+      </div>
+      <div class="hidden md:grid place-items-center text-slate-600"><i data-lucide="arrow-right" class="w-5 h-5"></i></div>
+      <div class="rounded-xl border border-accent/40 bg-accent/[.05] p-4 glow-cyan">
+        <div class="flex items-center gap-2 font-semibold text-sm"><i data-lucide="shield-plus" class="w-4 h-4 text-accent"></i>TraceZero immune layer</div>
+        <div class="grid grid-cols-2 gap-2 mt-3 text-[11px] font-mono">
+          <div class="rounded-md bg-ink-900 border border-ink-700 px-2 py-1.5">shadow buffer</div>
+          <div class="rounded-md bg-ink-900 border border-ink-700 px-2 py-1.5">shield registry</div>
+          <div class="rounded-md bg-ink-900 border border-ink-700 px-2 py-1.5">crash fingerprints</div>
+          <div class="rounded-md bg-ink-900 border border-ink-700 px-2 py-1.5">hot-swap runtime</div>
+        </div>
+      </div>
+      <div class="hidden md:grid place-items-center text-slate-600"><i data-lucide="arrow-right" class="w-5 h-5"></i></div>
+      <div class="rounded-xl border border-ink-700 bg-ink-850 p-4">
+        <div class="flex items-center gap-2 font-semibold text-sm"><i data-lucide="server" class="w-4 h-4 text-white/80"></i>Target services</div>
+        <p class="text-xs text-slate-400 mt-2 font-mono">store_logic.py<br>refund_logic.py</p>
+      </div>
+    </div>
+    <div class="flex justify-center my-3 text-slate-600"><i data-lucide="arrow-down" class="w-5 h-5"></i></div>
+    <div class="rounded-xl border border-white/20/30 bg-white/20/[.04] p-4">
+      <div class="flex items-center gap-2 font-semibold text-sm"><i data-lucide="cpu" class="w-4 h-4 text-white/80"></i>Healing engine <span class="font-mono text-[11px] text-slate-500 font-normal">agent_engine.py</span></div>
+      <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mt-3 text-[11px]">
+        <div class="rounded-md bg-ink-900 border border-ink-700 px-2 py-2 text-center">Shield</div>
+        <div class="rounded-md bg-ink-900 border border-ink-700 px-2 py-2 text-center">Red test</div>
+        <div class="rounded-md bg-ink-900 border border-accent/30 px-2 py-2 text-center text-orange-200">Surgeon ⚔ Breaker</div>
+        <div class="rounded-md bg-ink-900 border border-ink-700 px-2 py-2 text-center">Shadow replay</div>
+        <div class="rounded-md bg-ink-900 border border-ink-700 px-2 py-2 text-center">Twin scan</div>
+        <div class="rounded-md bg-ink-900 border border-ink-700 px-2 py-2 text-center">Deploy + PR</div>
+      </div>
+      <p class="text-xs text-slate-400 mt-3">Each stage publishes events on an in-process bus, streamed over Server-Sent Events to the War Room as they happen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Stages ============ -->
+<section class="max-w-6xl mx-auto px-5 py-14">
+  <div class="relative">
+    <div class="absolute left-[19px] top-2 bottom-2 w-px bg-gradient-to-b from-red-500/60 via-white/20/40 to-emerald-500/60 hidden md:block"></div>
+    <div class="space-y-10" id="stages"></div>
+  </div>
+</section>
+
+<!-- ============ Safety ============ -->
+<section id="safety" class="max-w-6xl mx-auto px-5 py-16 scroll-mt-20">
+  <div class="reveal max-w-2xl">
+    <div class="eyebrow">Safety model</div>
+    <h2 class="mt-3 text-3xl font-bold tracking-tight">Guardrails on the guardrail.</h2>
+    <p class="mt-3 text-slate-400">An autonomous system touching production has to be more careful than a human, not less. This is what keeps it honest.</p>
+  </div>
+  <div class="mt-10 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="reveal panel p-5"><div class="flex items-center gap-2 font-semibold"><i data-lucide="undo-2" class="w-4 h-4 text-amber-400"></i>Shields are reversible</div><p class="text-sm text-slate-400 mt-2">A shield only catches the exact fingerprint (exception type + function) it was armed for. Operators can lift or re-arm it at any time.</p></div>
+    <div class="reveal panel p-5"><div class="flex items-center gap-2 font-semibold"><i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>Humans approve deploys</div><p class="text-sm text-slate-400 mt-2">The pipeline stops at "verified". Nothing reaches the running service until a person clicks approve.</p></div>
+    <div class="reveal panel p-5"><div class="flex items-center gap-2 font-semibold"><i data-lucide="box" class="w-4 h-4 text-accent"></i>Tests run in a sandbox</div><p class="text-sm text-slate-400 mt-2">Patched modules are written to a disposable temp directory and tested with a separate pytest process with a timeout.</p></div>
+    <div class="reveal panel p-5"><div class="flex items-center gap-2 font-semibold"><i data-lucide="git-compare" class="w-4 h-4 text-white/70"></i>No silent behavior change</div><p class="text-sm text-slate-400 mt-2">Shadow replay requires the patch to return byte-identical output for real traffic that already worked. Any diff counts as a regression.</p></div>
+    <div class="reveal panel p-5"><div class="flex items-center gap-2 font-semibold"><i data-lucide="life-buoy" class="w-4 h-4 text-red-400"></i>Escalates when unsure</div><p class="text-sm text-slate-400 mt-2">If no patch survives three rounds, or the engine errors, the incident escalates and the shield stays up.</p></div>
+    <div class="reveal panel p-5"><div class="flex items-center gap-2 font-semibold"><i data-lucide="file-text" class="w-4 h-4 text-sky-400"></i>Everything is auditable</div><p class="text-sm text-slate-400 mt-2">Every event is streamed and kept. The PR carries the timeline, rounds, tests and replay evidence for review.</p></div>
+  </div>
+</section>
+
+<!-- ============ Modes + API ============ -->
+<section class="max-w-6xl mx-auto px-5 py-10 grid lg:grid-cols-2 gap-6">
+  <div class="reveal panel p-6">
+    <div class="panel-h mb-4">Two engines</div>
+    <div class="space-y-4">
+      <div class="flex gap-3"><span class="px-2 py-0.5 h-fit rounded bg-white/20/20 text-white/80 text-[11px] font-mono">LIVE</span><div><div class="font-semibold text-sm">Claude</div><p class="text-sm text-slate-400">With <span class="font-mono text-xs">ANTHROPIC_API_KEY</span> set, Claude writes the patches, the adversarial tests and the twin vaccines from the real traceback and source.</p></div></div>
+      <div class="flex gap-3"><span class="px-2 py-0.5 h-fit rounded bg-ink-700 text-slate-300 text-[11px] font-mono">PLAYBOOK</span><div><div class="font-semibold text-sm">Deterministic</div><p class="text-sm text-slate-400">Offline mode with scripted agents, so the demo never depends on Wi-Fi. If a live call fails, that one step falls back to it.</p></div></div>
+    </div>
+  </div>
+  <div class="reveal panel p-6">
+    <div class="panel-h mb-4">Control-plane API</div>
+    <table class="w-full text-[12.5px] font-mono">
+      <tbody class="divide-y divide-ink-700/70">
+        <tr><td class="py-2 text-emerald-300 w-14">GET</td><td class="py-2">/api/stream</td><td class="py-2 text-slate-500 font-sans">SSE event feed</td></tr>
+        <tr><td class="py-2 text-emerald-300">GET</td><td class="py-2">/api/state</td><td class="py-2 text-slate-500 font-sans">stats, shields, incidents</td></tr>
+        <tr><td class="py-2 text-amber-300">POST</td><td class="py-2">/api/chaos/{bug}</td><td class="py-2 text-slate-500 font-sans">change traffic shape</td></tr>
+        <tr><td class="py-2 text-amber-300">POST</td><td class="py-2">/api/shields/{id}/lift</td><td class="py-2 text-slate-500 font-sans">operator override</td></tr>
+        <tr><td class="py-2 text-amber-300">POST</td><td class="py-2">/api/incidents/{id}/deploy</td><td class="py-2 text-slate-500 font-sans">human approval</td></tr>
+        <tr><td class="py-2 text-amber-300">POST</td><td class="py-2">/api/incidents/{id}/pr</td><td class="py-2 text-slate-500 font-sans">open PR</td></tr>
+      </tbody>
+    </table>
+    <a href="/docs" target="_blank" class="mt-4 inline-flex items-center gap-1.5 text-sm text-accent hover:text-orange-200">Interactive OpenAPI docs <i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>
+  </div>
+</section>
+
+<section class="max-w-6xl mx-auto px-5 pt-8 text-center reveal">
+  <a href="/warroom" class="btn btn-primary px-6 py-3 rounded-xl inline-flex items-center gap-2"><i data-lucide="radar" class="w-4 h-4"></i>See it live in the War Room</a>
+</section>
+
+</div>
+<div id="site-footer"></div>
+<script>
+const STAGES = [
+  { n: '00', icon: 'siren', color: 'red', title: 'Detect', time: 'T+0ms',
+    what: 'The immune layer wraps every /shop route. When a request raises, TraceZero walks the traceback to the deepest frame inside a protected service and fingerprints it as exception type + module + function.',
+    why: 'Line numbers move when code changes, but the fingerprint stays stable. Repeat crashes join the same incident instead of opening new ones.',
+    code: 'fingerprint = "ZeroDivisionError@store_logic.average_unit_price"' },
+  { n: '01', icon: 'shield-check', color: 'amber', title: 'Instant Shield', time: '~250ms',
+    what: 'A guardrail is registered for that fingerprint. Requests that hit the same failure get a graceful safe-mode response (HTTP 202, order accepted, pricing finalized later) instead of a 500.',
+    why: 'Users stop feeling the outage before anyone has written a line of code. Each shield shows how many requests it absorbed.',
+    code: '202 {"status": "accepted_safe_mode", "shield": "SHD-91AF"}' },
+  { n: '02', icon: 'flask-conical', color: 'red', title: 'Red test', time: '~1s',
+    what: 'The exact production payload that crashed becomes a pytest. It runs against the current code in an isolated temp directory and must fail.',
+    why: 'A fix with no failing test first is a guess. This test also ships in the PR as a permanent regression guard.',
+    code: 'def test_repro_inc_8c1f():\n    payload = {"items": [], "coupon_code": ""}\n    assert store_logic.checkout(payload)["total"] >= 0' },
+  { n: '03', icon: 'swords', color: 'violet', title: 'Surgeon vs Breaker', time: '2-3 rounds',
+    what: 'The Surgeon reads the traceback and module, then writes the smallest fix. The Breaker reads the patch and writes three adversarial tests to break it. pytest is the referee. A failed round goes back to the Surgeon with the failing tests.',
+    why: 'One agent checking its own work is confirmation bias. Two agents with opposite goals find the edge cases a rushed human would miss.',
+    code: 'Round 1  SURGEON  if not items: return 0.0\nRound 1  BREAKER  qty=0 lines → ZeroDivisionError   ✗\nRound 2  SURGEON  if total_units <= 0: return 0.0   ✓ 4/4' },
+  { n: '04', icon: 'radio-tower', color: 'cyan', title: 'Shadow traffic replay', time: '~2s',
+    what: 'The last 15 successful real requests are kept in a ring buffer. They are replayed against the patched module along with the crash requests, and outputs are compared with what production actually returned.',
+    why: 'Tests prove the bug is gone. Replay proves nothing else changed. Because pricing is pure, any difference is a real regression.',
+    code: 'Confidence 100% · 16/16 passed · 0 regressions' },
+  { n: '05', icon: 'syringe', color: 'emerald', title: 'Twin-bug vaccination', time: '~1s',
+    what: 'An AST scanner searches every protected service for the incident\'s anti-pattern: division by a value that can be zero, or string methods on a parameter that can be None, with no guard in sight.',
+    why: 'The refunds team copied the same code months ago. It hasn\'t crashed yet only because the traffic hasn\'t reached it.',
+    code: 'refund_logic.py:25 average_refund_per_unit()\n  divides by sum(qty) with no guard → vaccinated' },
+  { n: '06', icon: 'rocket', color: 'pink', title: 'Approve, hot-deploy, PR', time: 'one click',
+    what: 'A human approves. The patched module is rebuilt and swapped into the running process with no restart, vaccines included. The shield retires and a PR is opened with a full postmortem.',
+    why: 'Fast where it is safe, careful where it matters, and the fix always ends up reviewed in git.',
+    code: 'fix(store_logic): guard average_unit_price() against unguarded-division' },
+];
+const C = { red: 'text-red-400 bg-red-500/15 border-red-500/40', amber: 'text-amber-300 bg-amber-500/15 border-amber-500/40', violet: 'text-white/80 bg-white/20/15 border-white/20/40', cyan: 'text-accent bg-accent/15 border-accent/40', emerald: 'text-emerald-300 bg-emerald-500/15 border-emerald-500/40', pink: 'text-pink-300 bg-pink-500/15 border-pink-500/40' };
+document.getElementById('stages').innerHTML = STAGES.map((s, i) => `
+  <div id="stage-${['detect','shield','reproduce','battle','replay','vaccinate','deploy'][i]}" class="reveal scroll-mt-28 grid md:grid-cols-[40px_1fr] gap-5">
+    <div class="w-10 h-10 rounded-xl border grid place-items-center relative z-10 ${C[s.color]}"><i data-lucide="${s.icon}" class="w-5 h-5"></i></div>
+    <div class="panel p-6 grid lg:grid-cols-[1.2fr_1fr] gap-6">
+      <div>
+        <div class="flex items-center gap-3"><span class="font-mono text-xs text-slate-500">${s.n}</span><h3 class="text-xl font-bold">${s.title}</h3><span class="ml-auto font-mono text-[11px] px-2 py-0.5 rounded bg-ink-800 border border-ink-700 text-slate-400">${s.time}</span></div>
+        <p class="mt-3 text-sm text-slate-300 leading-relaxed">${s.what}</p>
+        <p class="mt-3 text-sm text-slate-400 leading-relaxed"><span class="text-slate-200 font-medium">Why it matters:</span> ${s.why}</p>
+      </div>
+      <pre class="code rounded-lg bg-ink-950 border border-ink-700 p-4 text-[11.5px] text-slate-300 whitespace-pre-wrap h-fit">${s.code.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</pre>
+    </div>
+  </div>`).join('');
+</script>
+<script src="/static/site.js"></script>
+<script src="/static/fx.js"></script>
+</body>
+</html>
