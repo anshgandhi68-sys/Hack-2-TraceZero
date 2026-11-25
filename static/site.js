@@ -7,7 +7,7 @@
     ['/how-it-works', 'How it works'],
     ['/store', 'Live store'],
     ['/warroom', 'War Room'],
-    ['/about', 'FAQ'],
+    ['/about', 'About'],
   ];
   const path = location.pathname.replace(/\/$/, '') || '/';
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -33,12 +33,10 @@
       <a href="/" class="flex items-center gap-3 shrink-0" aria-label="TraceZero home">
         ${MARK}<span class="tz-word hidden sm:block text-[13px] font-semibold tracking-[.2em] uppercase transition-colors duration-500">TraceZero</span>
       </a>
-      <span id="navStatus" class="hidden xl:flex items-center gap-2 ml-2 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur border border-white/10 text-[10.5px] text-white/70"><span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>connecting</span>
       <div class="tz-pill hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 bg-white rounded-lg p-1 shadow-[0_8px_30px_-10px_rgba(0,0,0,.45)]">
         ${LINKS.map(([href, label]) => `<a href="${href}" class="px-3.5 py-2 rounded-md text-[13px] font-medium ${path === href ? 'bg-black text-white' : 'text-black/70 hover:text-black'}" ${path === href ? 'aria-current="page"' : ''}>${label}</a>`).join('')}
       </div>
       <div class="ml-auto flex items-center gap-2">
-        <a href="${REPO}" target="_blank" rel="noopener" class="hidden lg:grid w-11 h-11 rounded-lg bg-black text-white place-items-center border border-white/10 btn" aria-label="Source code on GitHub"><i data-lucide="github" class="w-4 h-4"></i></a>
         <a href="${cta[0]}" class="hidden lg:inline-flex btn items-center gap-3 bg-black text-white rounded-lg pl-1.5 pr-4 py-1.5 text-[13px] font-medium group">
           <span class="w-9 h-9 rounded-md bg-white/10 grid place-items-center arrow-ico">${CHEV}</span>${cta[1]}</a>
         <button class="tz-burger lg:hidden relative w-10 h-10 rounded-lg bg-white/10 backdrop-blur border border-white/10 grid place-items-center text-white btn" aria-label="Open menu" aria-expanded="false" aria-controls="tzMenu">
@@ -125,7 +123,8 @@
           <div>
             <div class="text-[11px] tracking-[.25em] uppercase text-black/40 mb-4">Project</div>
             <ul class="space-y-2.5 text-sm text-black/70">
-              <li><a class="hover:text-black" href="/about">About & FAQ</a></li>
+              <li><a class="hover:text-black" href="/about">About</a></li>
+              <li><a class="hover:text-black" href="/about#faq">FAQ</a></li>
               <li><a class="hover:text-black" href="${REPO}" target="_blank" rel="noopener">GitHub</a></li>
               <li><a class="hover:text-black" href="/docs" target="_blank">API docs</a></li>
             </ul>
@@ -133,8 +132,8 @@
         </div>
         <div class="mt-14 font-bubbledot text-[16vw] leading-[.8] tracking-tight text-black select-none" aria-hidden="true">TRACEZERO</div>
         <div class="mt-6 flex flex-wrap gap-3 justify-between text-[11px] text-black/45">
-          <span>© ${new Date().getFullYear()} TraceZero · built at a hackathon in 4 hours</span>
-          <span>NovaMart is a fictional demo store · live numbers come from this server</span>
+          <span>© ${new Date().getFullYear()} TraceZero</span>
+          <span>NovaMart is a fictional demo store</span>
         </div>
       </div>
     </footer>`;
